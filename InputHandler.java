@@ -78,8 +78,8 @@ public class InputHandler {
             }
         }
 
-        System.out.println();
-        GaussianEliminator.solve(a, b, n);
+        GaussianEliminator gaussianEliminator = new GaussianEliminator(a, b, n);
+        formResponse(gaussianEliminator);
     }
     private void inputFromFile(File file) {
         try {
@@ -103,13 +103,25 @@ public class InputHandler {
                 b[i] = fileScanner.nextDouble();
             }
 
-            System.out.println();
-            GaussianEliminator.solve(a, b, n);
+            GaussianEliminator gaussianEliminator = new GaussianEliminator(a, b, n);
+            formResponse(gaussianEliminator);
+
             fileScanner.close();
         } catch (InputMismatchException e) {
             System.out.println("Input mismatch. Please use a valid file format.");
         } catch (FileNotFoundException e) {
             System.out.println("File not found.");
+        }
+    }
+    private static void formResponse(GaussianEliminator gaussianEliminator) {
+        System.out.println();
+        System.out.println("Original matrix: ");
+        gaussianEliminator.matrixPrint();
+        try {
+            gaussianEliminator.solve();
+            gaussianEliminator.printResults();
+        } catch (ArithmeticException e) {
+            System.out.println(e.getMessage());
         }
     }
 }
