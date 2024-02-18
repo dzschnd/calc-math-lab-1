@@ -9,7 +9,14 @@ public class GaussianEliminator {
         matrixPrint(a, b, n);
 
         for (int pivot = 0; pivot < n; pivot++) {
-            maxPivotChoose(a, b, n, pivot);
+            int maxPivot = pivot;
+            for (int i = pivot + 1; i < n; i++) {
+                if (Math.abs(a[i][pivot]) > Math.abs(a[maxPivot][pivot])) {
+                    maxPivot = i;
+                }
+            }
+            rowsSwap(a, b, pivot, maxPivot);
+            determinant *= -1;
 
             if (Math.abs(a[pivot][pivot]) <= EPSILON) {
                 System.out.println("Matrix is singular\n");
@@ -71,14 +78,5 @@ public class GaussianEliminator {
             b[i] = b[j];
             b[j] = bTemp;
         }
-    }
-    private static void maxPivotChoose(double[][] a, double[] b, int n, int pivot) {
-        int maxPivot = pivot;
-        for (int i = pivot + 1; i < n; i++) {
-            if (Math.abs(a[i][pivot]) > Math.abs(a[maxPivot][pivot])) {
-                maxPivot = i;
-            }
-        }
-        rowsSwap(a, b, pivot, maxPivot);
     }
 }
