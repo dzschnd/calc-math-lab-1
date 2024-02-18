@@ -1,12 +1,20 @@
 public class GaussianEliminator {
     private static final double EPSILON = 1e-16;
-    public static void solve(double[][] a, double[] b, int n) {
-        double determinant = 1.0;
-        double[] x = new double[n];
-        double[] r = new double[n];
-
-        System.out.println("Original matrix: ");
-        matrixPrint(a, b, n);
+    private double[][] a;
+    private double[] b;
+    private double[] x;
+    private double[] r;
+    private double determinant;
+    private int n;
+    public GaussianEliminator(double[][] a, double[] b, int n) {
+        this.n = n;
+        this.a = a;
+        this.b = b;
+        x = new double[n];
+        r = new double[n];
+    }
+    public void solve() {
+        determinant = 1.0;
 
         for (int pivot = 0; pivot < n; pivot++) {
             int maxPivot = pivot;
@@ -15,12 +23,11 @@ public class GaussianEliminator {
                     maxPivot = i;
                 }
             }
-            rowsSwap(a, b, pivot, maxPivot);
+            rowsSwap(pivot, maxPivot);
             determinant *= -1;
 
             if (Math.abs(a[pivot][pivot]) <= EPSILON) {
-                System.out.println("Matrix is singular\n");
-                return;
+                throw new ArithmeticException("Matrix is singular.\n");
             }
 
             determinant *= a[pivot][pivot];
@@ -42,25 +49,8 @@ public class GaussianEliminator {
             x[i] = (b[i] - sum) / a[i][i];
             r[i] = b[i] - (sum + a[i][i] * x[i]);
         }
-
-        System.out.println("Determinant = " + determinant + "\n");
-
-        System.out.println("Triangle matrix: ");
-        matrixPrint(a, b, n);
-
-        System.out.println("Solution: ");
-        for (int i = 0; i < n; i++) {
-            System.out.print("x[" + i + "] = " + x[i] + " ");
-        }
-        System.out.println("\n");
-
-        System.out.println("Residuals: ");
-        for (int i = 0; i < n; i++) {
-            System.out.print("r[" + i + "] = " + r[i] + " ");
-        }
-        System.out.println("\n");
     }
-    private static void matrixPrint(double[][] a, double[] b, int n) {
+    public void matrixPrint() {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 System.out.print(a[i][j] + " ");
@@ -69,7 +59,19 @@ public class GaussianEliminator {
         }
         System.out.println();
     }
-    private static void rowsSwap(double[][] a, double[] b, int i, int j) {
+    public double getDeterminant() {
+        return this.determinant;
+    }
+    public double[] getSolution() {
+        return x;
+    }
+    public double[] getResiduals() {
+        return r;
+    }
+    public int getN() {
+        return n;
+    }
+    private void rowsSwap(int i, int j) {
         if (i != j) {
             double[] aTemp = a[i];
             a[i] = a[j];
@@ -78,5 +80,20 @@ public class GaussianEliminator {
             b[i] = b[j];
             b[j] = bTemp;
         }
+    }
+    public void printResults() {
+        System.out.println("Determinant = " + determinant + "\n");
+        System.out.println("Triangle matrix: ");
+        this.matrixPrint();
+        System.out.println("Solution: ");
+        for (int i = 0; i < n; i++) {
+            System.out.print("x[" + i + "] = " + x[i] + " ");
+        }
+        System.out.println("\n");
+        System.out.println("Residuals: ");
+        for (int i = 0; i < n; i++) {
+            System.out.print("r[" + i + "] = " + r[i] + " ");
+        }
+        System.out.println("\n");
     }
 }
