@@ -1,99 +1,105 @@
+import java.text.DecimalFormat;
+
 public class GaussianEliminator {
     private static final double EPSILON = 1e-16;
-    private double[][] a;
-    private double[] b;
-    private double[] x;
-    private double[] r;
+    private double[][] coefficients;
+    private double[] constants;
+    private double[] unknowns;
+    private double[] residuals;
     private double determinant;
-    private int n;
-    public GaussianEliminator(double[][] a, double[] b, int n) {
-        this.n = n;
-        this.a = a;
-        this.b = b;
-        x = new double[n];
-        r = new double[n];
+    private int equationCount;
+    public GaussianEliminator(double[][] coefficients, double[] constants, int equationCount) {
+        this.equationCount = equationCount;
+        this.coefficients = coefficients;
+        this.constants = constants;
+        unknowns = new double[equationCount];
+        residuals = new double[equationCount];
     }
     public void solve() {
         determinant = 1.0;
 
-        for (int pivot = 0; pivot < n; pivot++) {
+        for (int pivot = 0; pivot < equationCount; pivot++) {
             int maxPivot = pivot;
-            for (int i = pivot + 1; i < n; i++) {
-                if (Math.abs(a[i][pivot]) > Math.abs(a[maxPivot][pivot])) {
+            for (int i = pivot + 1; i < equationCount; i++) {
+                if (Math.abs(coefficients[i][pivot]) > Math.abs(coefficients[maxPivot][pivot])) {
                     maxPivot = i;
                 }
             }
-            rowsSwap(pivot, maxPivot);
-            determinant *= -1;
+            if (pivot != maxPivot) {
+                rowsSwap(pivot, maxPivot);
+                determinant *= -1;
+            }
 
-            if (Math.abs(a[pivot][pivot]) <= EPSILON) {
+            if (Math.abs(coefficients[pivot][pivot]) <= EPSILON) {
                 throw new ArithmeticException("Matrix is singular.\n");
             }
 
-            determinant *= a[pivot][pivot];
+            determinant *= coefficients[pivot][pivot];
 
-            for (int i = pivot + 1; i < n; i++) {
-                double factor = a[i][pivot] / a[pivot][pivot];
-                b[i] -= factor * b[pivot];
-                for (int j = pivot; j < n; j++) {
-                    a[i][j] -= factor * a[pivot][j];
+            for (int i = pivot + 1; i < equationCount; i++) {
+                double factor = coefficients[i][pivot] / coefficients[pivot][pivot];
+                constants[i] -= factor * constants[pivot];
+                for (int j = pivot; j < equationCount; j++) {
+                    coefficients[i][j] -= factor * coefficients[pivot][j];
                 }
             }
         }
 
-        for (int i = n - 1; i >= 0; i--) {
+        for (int i = equationCount - 1; i >= 0; i--) {
             double sum = 0.0;
-            for (int j = i + 1; j < n; j++) {
-                sum += a[i][j] * x[j];
+            for (int j = i + 1; j < equationCount; j++) {
+                sum += coefficients[i][j] * unknowns[j];
             }
-            x[i] = (b[i] - sum) / a[i][i];
-            r[i] = b[i] - (sum + a[i][i] * x[i]);
+            unknowns[i] = (constants[i] - sum) / coefficients[i][i];
+            residuals[i] = constants[i] - (sum + coefficients[i][i] * unknowns[i]);
         }
     }
+    private void rowsSwap(int i, int j) {
+        double[] aTemp = coefficients[i];
+        coefficients[i] = coefficients[j];
+        coefficients[j] = aTemp;
+        double bTemp = constants[i];
+        constants[i] = constants[j];
+        constants[j] = bTemp;
+    }
     public void matrixPrint() {
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                System.out.print(a[i][j] + " ");
+        int gap = 4;
+        int maxCoefficientLength = getMaxCoefficientLength();
+        for (int i = 0; i < equationCount; i++) {
+            for (int j = 0; j < equationCount; j++) {
+                System.out.printf("%-" + (maxCoefficientLength + gap) + "s", format(coefficients[i][j]));
             }
-            System.out.println("| " + b[i]);
+            System.out.println("|    " + format(constants[i]));
         }
         System.out.println();
     }
-    public double getDeterminant() {
-        return this.determinant;
-    }
-    public double[] getSolution() {
-        return x;
-    }
-    public double[] getResiduals() {
-        return r;
-    }
-    public int getN() {
-        return n;
-    }
-    private void rowsSwap(int i, int j) {
-        if (i != j) {
-            double[] aTemp = a[i];
-            a[i] = a[j];
-            a[j] = aTemp;
-            double bTemp = b[i];
-            b[i] = b[j];
-            b[j] = bTemp;
+    private int getMaxCoefficientLength() {
+        int maxLength = 0;
+        for (double[] row : coefficients) {
+            for (double coefficient : row) {
+                String formattedCoefficient = format(coefficient);
+                maxLength = Math.max(maxLength, formattedCoefficient.length());
+            }
         }
+        return maxLength;
     }
     public void printResults() {
-        System.out.println("Determinant = " + determinant + "\n");
+        System.out.println("Determinant = " + format(determinant) + "\n");
         System.out.println("Triangle matrix: ");
         this.matrixPrint();
         System.out.println("Solution: ");
-        for (int i = 0; i < n; i++) {
-            System.out.print("x[" + i + "] = " + x[i] + " ");
+        for (int i = 0; i < equationCount; i++) {
+            System.out.println("x[" + i + "] = " + format(unknowns[i]));
         }
-        System.out.println("\n");
+        System.out.println();
         System.out.println("Residuals: ");
-        for (int i = 0; i < n; i++) {
-            System.out.print("r[" + i + "] = " + r[i] + " ");
+        for (int i = 0; i < equationCount; i++) {
+            System.out.println("r[" + i + "] = " + format(residuals[i]));
         }
-        System.out.println("\n");
+        System.out.println();
+    }
+    private String format(double number) {
+        double roundedNumber = Math.round(number * 10E3) / 10E3;
+        return Double.toString(roundedNumber);
     }
 }
